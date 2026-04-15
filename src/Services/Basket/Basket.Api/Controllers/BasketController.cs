@@ -1,6 +1,8 @@
-﻿using Basket.Api.Entities;
+using Basket.Api.Entities;
 using Basket.Api.GrpcService;
 using Basket.Api.Repositores;
+using EventBus.Messages.Events;
+using MassTransit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -17,11 +19,13 @@ namespace Basket.Api.Controllers
     {
         private readonly IBasketRepository _basketRepository;
         private readonly DiscountGrpcService _discountGrpcService;
+        private readonly IPublishEndpoint _publishEndpoint;
 
-        public BasketController(IBasketRepository basketRepository, DiscountGrpcService discountGrpcService)
+        public BasketController(IBasketRepository basketRepository, DiscountGrpcService discountGrpcService, IPublishEndpoint publishEndpoint)
         {
             _basketRepository = basketRepository;
             _discountGrpcService = discountGrpcService;
+            _publishEndpoint = publishEndpoint;
         }
 
         [HttpGet("{userName}",Name ="GetBasket")]
@@ -50,6 +54,38 @@ namespace Basket.Api.Controllers
         {
             await _basketRepository.DeleteBasket(userName);
             return Ok();
+        }
+
+        [HttpPost("checkout")]
+        [ProducesResponseType((int)HttpStatusCode.Accepted)]
+        public async Task<IActionResult> Checkout([FromBody] BasketCheckout checkout)
+        {
+            var basket = await _basketRepository.GetBasket(checkout.UserName);
+            if (basket is null)
+                return BadRequest("Basket not found.");
+
+            var eventMessage = new BasketCheckoutIntegrationEvent
+            {
+                UserName = checkout.UserName,
+                TotalPrice = basket.TotalPrice,
+                FirstName = checkout.FirstName,
+                LastName = checkout.LastName,
+                EmailAddress = checkout.EmailAddress,
+                AddressLine = checkout.AddressLine,
+                Country = checkout.Country,
+                State = checkout.State,
+                ZipCode = checkout.ZipCode,
+                CardName = checkout.CardName,
+                CardNumber = checkout.CardNumber,
+                Expiration = checkout.Expiration,
+                CVV = checkout.CVV,
+                PaymentMethod = checkout.PaymentMethod
+            };
+
+            await _publishEndpoint.Publish(eventMessage);
+            await _basketRepository.DeleteBasket(checkout.UserName);
+
+            return Accepted();
         }
     }
 }

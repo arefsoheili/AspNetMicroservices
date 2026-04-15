@@ -1,6 +1,7 @@
 using Basket.Api.GrpcService;
 using Basket.Api.Repositores;
 using Discount.Grpc.Protos;
+using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -31,6 +32,18 @@ namespace Basket.Api
             services.AddStackExchangeRedisCache(options =>
             {
                 options.Configuration = Configuration.GetValue<string>("CacheSettings:ConnectionString");
+            });
+
+            services.AddMassTransit(x =>
+            {
+                x.UsingRabbitMq((context, cfg) =>
+                {
+                    cfg.Host(Configuration["EventBusSettings:Host"], "/", h =>
+                    {
+                        h.Username(Configuration["EventBusSettings:UserName"] ?? "guest");
+                        h.Password(Configuration["EventBusSettings:Password"] ?? "guest");
+                    });
+                });
             });
 
             services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(

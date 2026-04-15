@@ -1,31 +1,23 @@
-﻿using Ordering.Domain.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Ordering.Domain.Common;
 
-namespace Ordering.Domain.Entities
+namespace Ordering.Domain.Entities;
+
+public class Order : EntityBase
 {
-    public class Order : EntityBase
-    {
-        public string UserName { get; set; }
-        public decimal TotalPrice { get; set; }
+    public string UserName { get; set; } = default!;
+    public decimal TotalPrice { get; set; }
 
-        // BillingAddress
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string EmailAddress { get; set; }
-        public string AddressLine { get; set; }
-        public string Country { get; set; }
-        public string State { get; set; }
-        public string ZipCode { get; set; }
+    public string FirstName { get; set; } = default!;
+    public string LastName { get; set; } = default!;
+    public string EmailAddress { get; set; } = default!;
+    public string AddressLine { get; set; } = default!;
+    public string Country { get; set; } = default!;
+    public string State { get; set; } = default!;
+    public string ZipCode { get; set; } = default!;
 
-        // Payment
-        public string CardName { get; set; }
-        public string CardNumber { get; set; }
-        public string Expiration { get; set; }
-        public string CVV { get; set; }
-        public int PaymentMethod { get; set; }
-    }
+    public string CardName { get; set; } = default!;
+    public string CardNumber { get; set; } = default!;
+    public string Expiration { get; set; } = default!;
+    public string CVV { get; set; } = default!;
+    public int PaymentMethod { get; set; }
 }
