@@ -50,8 +50,16 @@ services:
       - "8080:8000"
       - "9080:9000"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock  
-      - portainer_data:/data portainer/portainer-ce
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
 
 
   catalog.api:

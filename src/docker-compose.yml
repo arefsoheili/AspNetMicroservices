@@ -13,6 +13,8 @@ services:
     image: dpage/pgadmin4
   portainer:
     image: portainer/portainer-ce
+  rabbitmq:
+    image: rabbitmq:3-management
 
   catalog.api:
     image: ${DOCKER_REGISTRY-}catalogapi

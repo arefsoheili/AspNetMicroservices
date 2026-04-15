@@ -1,0 +1,69 @@
+name: Release build
+
+# CD-style workflow: publish API projects and attach artifacts to the GitHub Release when you push a version tag.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: catalog-api
+            project: Services/Catalog/Catalog.Api/Catalog.Api.csproj
+          - name: basket-api
+            project: Services/Basket/Basket.Api/Basket.Api.csproj
+          - name: discount-api
+            project: Services/Discount/Discount.Api/Discount.Api.csproj
+          - name: discount-grpc
+            project: Services/Discount/Discount.Grpc/Discount.Grpc.csproj
+          - name: ordering-api
+            project: Services/Ordering/Ordering.Api/Ordering.Api.csproj
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: src/global.json
+
+      - name: Publish ${{ matrix.name }}
+        run: dotnet publish "${{ matrix.project }}" -c Release -o "./publish/${{ matrix.name }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: src/publish/${{ matrix.name }}
+          if-no-files-found: error
+
+  github-release:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
