@@ -2,6 +2,46 @@
 
 Minimal e-commerce microservices sample built with ASP.NET Core.
 
+### Project structure
+
+The solution lives under `src/` and is organized by **services** (each service is deployable independently) plus **building blocks** (shared contracts).
+
+```text
+AspNetMicroservices/
+├─ README.md
+└─ src/
+   ├─ aspnetrun-microservices.sln
+   ├─ docker-compose.yml
+   ├─ docker-compose.override.yml
+   ├─ BuildingBlocks/
+   │  └─ EventBus.Messages/
+   │     └─ Events/
+   │        └─ BasketCheckoutIntegrationEvent.cs
+   └─ Services/
+      ├─ Catalog/
+      │  └─ Catalog.Api
+      ├─ Basket/
+      │  └─ Basket.Api
+      ├─ Discount/
+      │  ├─ Discount.Api
+      │  └─ Discount.Grpc
+      └─ Ordering/
+         ├─ Ordering.Api
+         ├─ Ordering.Application
+         ├─ Ordering.Domain
+         └─ Ordering.infrastructure
+```
+
+### Architecture overview
+
+- **Service ownership & data**: Each service owns its own data store (MongoDB for Catalog, Redis for Basket, Postgres for Discount). `Ordering` is modeled with a Clean Architecture project split.
+- **Sync calls**:
+  - **Basket → Discount.Grpc**: Basket calculates pricing/discounts by calling the gRPC service.
+  - **Clients → \*.Api**: Each service exposes an HTTP API surface.
+- **Async messaging (event-driven)**:
+  - **Basket → RabbitMQ → Ordering**: Basket publishes `BasketCheckoutIntegrationEvent` and Ordering consumes it to create orders.
+  - Event contracts are kept in `BuildingBlocks/EventBus.Messages` so the publisher and consumer share the same message schema.
+
 ### Services
 
 - **Catalog** (`Services/Catalog/Catalog.Api`): Product catalog (MongoDB).
