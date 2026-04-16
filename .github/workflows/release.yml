@@ -45,7 +45,7 @@ jobs:
         run: dotnet publish "${{ matrix.project }}" -c Release -o "./publish/${{ matrix.name }}"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.name }}
           path: src/publish/${{ matrix.name }}
